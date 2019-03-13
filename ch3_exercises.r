@@ -350,3 +350,74 @@ plot(lm.fit)
 tail(hatvalues(lm.fit), 1) / mean(hatvalues(lm.fit))
 # This is a high leverage point in this model - it's 4.372822 times greater than
 # the average hatvalue!
+
+# 15.
+# a)
+library(MASS)
+attach(Boston)
+lm_tvalue <- function (x) {
+    tvalue <- summary(x)$coefficients[2,3]
+    tvalue
+}
+
+lm_pvalue <- function (x) {
+   pvalue <- summary(x)$coefficients[2,4]
+   pvalue
+}
+
+is_significant <- function(linear_model) {
+     lm_pvalue(linear_model) < .05
+}
+
+predictors <- names(Boston)[2:14]
+for(predictor in predictors) {
+    predictions <- get(predictor, Boston)
+    if (is_significant(lm(crim~predictions))) {
+        message(predictor, " does affect crime")
+        plot(predictions, crim)
+        abline(lm(crim~predictions), col="red", lwd=3)
+    } else {
+        message(predictor, " does not affect crime")
+    }
+}
+
+# zn does affect crime
+# indus does affect crime
+# chas does not affect crime
+# nox does affect crime
+# rm does affect crime
+# age does affect crime
+# dis does affect crime
+# rad does affect crime
+# tax does affect crime
+# ptratio does affect crime
+# black does affect crime
+# lstat does affect crime
+# medv does affect crime
+
+# Everything but 'chas' predicts crime!
+
+# b)
+all_lm <- lm(crim~zn+indus+chas+nox+rm+age+dis+rad+tax+ptratio+black+lstat+medv)
+summary(all_lm)$coefficients[,4] < 0.05
+
+# (Intercept)          zn       indus        chas         nox          rm
+#        TRUE        TRUE       FALSE       FALSE       FALSE       FALSE
+
+#         age         dis         rad         tax     ptratio       black
+#       FALSE        TRUE        TRUE       FALSE       FALSE        TRUE
+
+#       lstat        medv
+#       FALSE        TRUE
+
+# We can reject the null hypothesis for 'zn', 'dis', 'rad', 'black', and 'medv'.
+# If we restrict our p-value to 1%, we can reject the null hypothesis for
+# (Intercept)          zn       indus        chas         nox          rm
+#       FALSE       FALSE       FALSE       FALSE       FALSE       FALSE
+
+#         age         dis         rad         tax     ptratio       black
+#       FALSE        TRUE        TRUE       FALSE       FALSE       FALSE
+
+#       lstat        medv
+#       FALSE        TRUE
+# 'dis', 'rad', and 'medv'
