@@ -398,7 +398,7 @@ for(predictor in predictors) {
 # Everything but 'chas' predicts crime!
 
 # b)
-all_lm <- lm(crim~zn+indus+chas+nox+rm+age+dis+rad+tax+ptratio+black+lstat+medv)
+all_lm <- lm(crim~.,data=Boston)
 summary(all_lm)$coefficients[,4] < 0.05
 
 # (Intercept)          zn       indus        chas         nox          rm
@@ -421,3 +421,46 @@ summary(all_lm)$coefficients[,4] < 0.05
 #       lstat        medv
 #       FALSE        TRUE
 # 'dis', 'rad', and 'medv'
+
+# c)
+univariate_coefficients <- c()
+predictors <- names(Boston)[2:14]
+for(predictor in predictors) {
+    model <- as.formula(paste('crim~', predictor))
+    univariate_coefficients <- c(univariate_coefficients,
+                                coefficients(lm(model))[2])
+}
+
+all_lm <- lm(crim~.,data=Boston)
+multivariate_coefficients <- coefficients(all_lm)[-1]
+plot(univariate_coefficients, multivariate_coefficients)
+
+# d)
+has_nonlinear_association <- function(response, predictor) {
+    linear_model <- as.formula(paste(response, '~', predictor))
+    cubic_model <- as.formula(paste(response, '~ poly(', predictor, ',3)'))
+    comparison <- anova(lm(linear_model), lm(cubic_model))
+    comparison$'F'[2] > 10 && comparison$'Pr(>F)'[2] < .01
+}
+
+predictors <- c(names(Boston)[2:3], names(Boston)[5:14])
+for(predictor in predictors) {
+    if(has_nonlinear_association('crim', predictor)) {
+        message(predictor, " has a non-linear association with crime")
+    } else {
+        message(predictor, " does not have a non-linear association with crime")
+    }
+}
+
+# zn does not have a non-linear association with crime
+# indus has a non-linear association with crime
+# nox has a non-linear association with crime
+# rm does not have a non-linear association with crime
+# age has a non-linear association with crime
+# dis has a non-linear association with crime
+# rad does not have a non-linear association with crime
+# tax has a non-linear association with crime
+# ptratio does not have a non-linear association with crime
+# black does not have a non-linear association with crime
+# lstat does not have a non-linear association with crime
+# medv has a non-linear association with crime
