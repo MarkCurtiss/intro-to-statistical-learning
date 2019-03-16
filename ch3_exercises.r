@@ -354,12 +354,6 @@ tail(hatvalues(lm.fit), 1) / mean(hatvalues(lm.fit))
 # 15.
 # a)
 library(MASS)
-attach(Boston)
-lm_tvalue <- function (x) {
-    tvalue <- summary(x)$coefficients[2,3]
-    tvalue
-}
-
 lm_pvalue <- function (x) {
    pvalue <- summary(x)$coefficients[2,4]
    pvalue
@@ -370,30 +364,37 @@ is_significant <- function(linear_model) {
 }
 
 predictors <- names(Boston)[2:14]
-for(predictor in predictors) {
-    predictions <- get(predictor, Boston)
-    if (is_significant(lm(crim~predictions))) {
-        message(predictor, " does affect crime")
-        plot(predictions, crim)
-        abline(lm(crim~predictions), col="red", lwd=3)
-    } else {
-        message(predictor, " does not affect crime")
-    }
-}
+lapply(predictors, function(x) { paste(x, 'affects crime? ',
+        is_significant(lm(crim~Boston[[x]], data=Boston))) }
+)
 
-# zn does affect crime
-# indus does affect crime
-# chas does not affect crime
-# nox does affect crime
-# rm does affect crime
-# age does affect crime
-# dis does affect crime
-# rad does affect crime
-# tax does affect crime
-# ptratio does affect crime
-# black does affect crime
-# lstat does affect crime
-# medv does affect crime
+# [[1]]
+# [1] "zn affects crime?  TRUE"
+# [[2]]
+# [1] "indus affects crime?  TRUE"
+# [[3]]
+# [1] "chas affects crime?  FALSE"
+# [[4]]
+# [1] "nox affects crime?  TRUE"
+# [[5]]
+# [1] "rm affects crime?  TRUE"
+# [[6]]
+# [1] "age affects crime?  TRUE"
+# [[7]]
+# [1] "dis affects crime?  TRUE"
+# [[8]]
+# [1] "rad affects crime?  TRUE"
+# [[9]]
+# [1] "tax affects crime?  TRUE"
+# [[10]]
+# [1] "ptratio affects crime?  TRUE"
+# [[11]]
+# [1] "black affects crime?  TRUE"
+# [[12]]
+# [1] "lstat affects crime?  TRUE"
+# [[13]]
+# [1] "medv affects crime?  TRUE"
+
 
 # Everything but 'chas' predicts crime!
 
