@@ -45,11 +45,13 @@ receive_an_a(40, 3.5)
 
 
 # 9.
-# TODO: use the odds function
-# a) 37/100 ?
-# b) 4 in 25.
+(0.37)/(1-0.37)
+# 0.5873016, or 37 in 63 will default.
+.16/(1-.16)
+# b) 0.1904762, or 4 in 21
 
 # 10.
+install.packages("ISLR")
 require(ISLR)
 plot(Weekly)
 # a) Volume increases by year.  I don't see other obvious patterns.
@@ -99,3 +101,61 @@ pct_of_correct_predictions(confusion_matrix)
 #        Down    9  5
 #        Up     34 56
 # 62.5
+
+# 11.
+# a)
+Auto <- read.csv("~/Documents/intro_to_statistical_learning/Auto.csv", header=T, na.strings="?")
+mpg01 <- (Auto$mpg > median(Auto$mpg))
+auto_with_mpg01 <- data.frame(Auto, mpg01)
+
+pairs(auto_with_mpg01)
+boxplot(auto_with_mpg01)
+plot(auto_with_mpg01$mpg01, auto_with_mpg01$weight)
+# b) Weight seems useful in predicting mpg01.  Horsepower also seems correlated although lots of low-horsepower
+# cars also have below average mpg.  Same with displacement.
+
+# c)
+mpg_train <- Auto$year < 75
+auto_train <- auto_with_mpg01[mpg_train,]
+auto_test <- auto_with_mpg01[!mpg_train,]
+
+# d)
+library(MASS)
+mpg.fit <- lda(mpg01~weight+displacement+horsepower,data=auto_with_mpg01,subset=mpg_train)
+mpg.trained_probs <- predict(mpg.fit, auto_test, type='response')
+
+
+# 12.
+Power <- function() {
+    print(2^3)
+}
+Power()
+# a)
+# [1] 8
+
+Power2 <- function(x,a) {
+    print(x^a)
+}
+Power2(3,8)
+# b)
+# [1] 6561
+
+Power2(10,3)
+Power2(8,17)
+Power2(131,3)
+# c)
+# [1] 1000
+# [1] 2.2518e+15
+# [1] 2248091
+
+Power3 <- function (x,a){
+    return(x^a)
+}
+vals <- 1:10
+plot(x=vals,y=Power3(vals,2), xlab='x', ylab='x^2', main="x vs x^2")
+# e) I actually prefer the normal scale rather than logarithmic!
+
+PlotPower <- function(x, a) {
+    plot(x=x, y=Power3(x,a))
+}
+PlotPower(1:10, 2)
