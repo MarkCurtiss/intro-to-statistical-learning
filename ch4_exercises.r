@@ -1,5 +1,6 @@
 # 1.
 # No!
+# This is possible with algebra
 
 # 2.
 # No!
@@ -12,7 +13,8 @@
 
 # 5.
 # a)
-# We expect linear discrimant analysis to perform better on the training and test sets.
+# We expect quadratic discrimant analysis to perform better on the training set and linear discrimant analysis
+# to perform better on the test set.
 # b)
 # We expect quadratic discrimant analysis to perform better on the training and test sets.
 # c)
@@ -35,14 +37,15 @@ receive_an_a(40, 3.5)
 # b) 50 hours
 
 # 7.
-# No!
+# TODO: Use the probability function
 
 # 8.
-# Is this a trick question about averages ? I don't think we have enough information to decide since the
-# KNN classifier could've had a training error rate of 0% but a test error rate of 36%, or a training
-# error rate of 1% and a test error rate of 35%.
+# The KNN classifier will have a 0% training error rate and thus it had a 36% test error rate.
+# This means we should use logistic regression with its 30% test error rate.
+
 
 # 9.
+# TODO: use the odds function
 # a) 37/100 ?
 # b) 4 in 25.
 
