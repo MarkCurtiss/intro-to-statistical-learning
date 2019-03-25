@@ -37,7 +37,16 @@ receive_an_a(40, 3.5)
 # b) 50 hours
 
 # 7.
-# TODO: Use the probability function
+# computed by hand
+# 0.6976296
+
+predicted_probability <- function (prior_yes, prior_no, current_val, variance, mean_yes, mean_no) {
+    numerator <- (prior_yes*(1/(sqrt(2*pi*sqrt(variance)))))^(-(1/(2*variance))*(current_val - mean_yes))
+    denominator <- (prior_no*(1/(sqrt(2*pi*sqrt(variance)))))^(-(1/(2*variance))*(current_val - mean_no))
+    return(numerator/denominator)
+}
+predicted_probability(.8, .2, 4, 36, 10, 0)
+# [1] 0.6976299
 
 # 8.
 # The KNN classifier will have a 0% training error rate and thus it had a 36% test error rate.
@@ -100,7 +109,55 @@ pct_of_correct_predictions(confusion_matrix)
 # predictions Down Up
 #        Down    9  5
 #        Up     34 56
-# 62.5
+# [1] 62.5
+
+library(MASS)
+lda.weekly_trained <- lda(Direction~Lag2,data=Weekly,subset=train)
+lda.predictions <- predict(lda.weekly_trained, test_data)$class
+confusion_matrix <- table(lda.predictions, test_data$Direction, dnn=c('predictions', 'actual'))
+confusion_matrix
+pct_of_correct_predictions(confusion_matrix)
+
+# e)
+#            actual
+# predictions Down Up
+#        Down    9  5
+#        Up     34 56
+# [1] 62.5
+
+qda.weekly_trained <- qda(Direction~Lag2,data=Weekly,subset=train)
+qda.predictions <- predict(qda.weekly_trained, test_data)$class
+confusion_matrix <- table(qda.predictions, test_data$Direction, dnn=c('predictions', 'actual'))
+confusion_matrix
+pct_of_correct_predictions(confusion_matrix)
+
+# f)
+#            actual
+# predictions Down Up
+#        Down    0  0
+#        Up     43 61
+# [1] 58.65385
+
+require(class)
+train.X <- data.frame(Weekly[train,]$Lag2)
+test.X <- data.frame(Weekly[!train,]$Lag2)
+train.Direction <- Weekly[train,]$Direction
+set.seed(1)
+knn.predictions <- knn(train.X, test.X, train.Direction, k=1)
+confusion_matrix <- table(knn.predictions, test_data$Direction, dnn=c('predictions', 'actual'))
+confusion_matrix
+pct_of_correct_predictions(confusion_matrix)
+# g)
+#            actual
+# predictions Down Up
+#        Down   21 30
+#        Up     22 31
+# [1] 50
+
+# h) LDA and QDA performed the best with a 62.5% success rate.
+
+# i) TODO.
+
 
 # 11.
 # a)
@@ -119,7 +176,7 @@ mpg_train <- Auto$year < 75
 auto_train <- auto_with_mpg01[mpg_train,]
 auto_test <- auto_with_mpg01[!mpg_train,]
 
-# d)
+# d) WIP
 library(MASS)
 mpg.fit <- lda(mpg01~weight+displacement+horsepower,data=auto_with_mpg01,subset=mpg_train)
 mpg.trained_probs <- predict(mpg.fit, auto_test, type='response')
