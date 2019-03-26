@@ -37,16 +37,15 @@ receive_an_a(40, 3.5)
 # b) 50 hours
 
 # 7.
-# computed by hand
-# 0.6976296
+# computed by hand:  0.7518525
 
 predicted_probability <- function (prior_yes, prior_no, current_val, variance, mean_yes, mean_no) {
-    numerator <- (prior_yes*(1/(sqrt(2*pi*sqrt(variance)))))^(-(1/(2*variance))*(current_val - mean_yes))
-    denominator <- (prior_no*(1/(sqrt(2*pi*sqrt(variance)))))^(-(1/(2*variance))*(current_val - mean_no))
+    numerator <- prior_yes * exp((-1/(2*variance)) * (current_val - mean_yes)^2)
+    denominator <- prior_no * exp((-1/(2*variance)) * (current_val - mean_no)^2) + numerator
     return(numerator/denominator)
 }
 predicted_probability(.8, .2, 4, 36, 10, 0)
-# [1] 0.6976299
+# [1] 0.7518525
 
 # 8.
 # The KNN classifier will have a 0% training error rate and thus it had a 36% test error rate.
@@ -156,12 +155,26 @@ pct_of_correct_predictions(confusion_matrix)
 
 # h) LDA and QDA performed the best with a 62.5% success rate.
 
-# i) TODO.
+assess_model_predictions <- function(model, test_data, predictor) {
+    predictions <- predict(model, test_data)$class
+    confusion_matrix <- table(predictions, test_data[[predictor]], dnn=c('predictions', 'actual'))
+    confusion_matrix
+    return(pct_of_correct_predictions(confusion_matrix))
+}
 
+assess_model_predictions(lda(Direction~Lag2+Today,data=Weekly,subset=train), test_data, 'Direction')
+assess_model_predictions(qda(Direction~Lag2+Today,data=Weekly,subset=train), test_data, 'Direction')
+# i) It's cheating, but I can get above 95% if I include 'Today'!
+# [1] 96.15385.
+# [1] 98.07692
+# Seriously though.  I tried using knn at a wide variety of n and I also tried squaring, rooting, logging,
+# and interacting various combinations of variables and I couldn't improve on lda(Direction~Lag2) or
+# qda(Direction~Lag2).
 
 # 11.
 # a)
 Auto <- read.csv("~/Documents/intro_to_statistical_learning/Auto.csv", header=T, na.strings="?")
+Auto = na.omit(Auto)
 mpg01 <- (Auto$mpg > median(Auto$mpg))
 auto_with_mpg01 <- data.frame(Auto, mpg01)
 
@@ -176,11 +189,22 @@ mpg_train <- Auto$year < 75
 auto_train <- auto_with_mpg01[mpg_train,]
 auto_test <- auto_with_mpg01[!mpg_train,]
 
-# d) WIP
+# d)
 library(MASS)
-mpg.fit <- lda(mpg01~weight+displacement+horsepower,data=auto_with_mpg01,subset=mpg_train)
-mpg.trained_probs <- predict(mpg.fit, auto_test, type='response')
+assess_model_predictions(
+    lda(mpg01~weight+displacement+horsepower,data=auto_with_mpg01,subset=mpg_train),
+    auto_test,
+    "mpg01"
+)
+# [1] 89.2562, or a test error of 10.7438%
 
+# e)
+assess_model_predictions(
+    qda(mpg01~weight+displacement,data=auto_with_mpg01,subset=mpg_train),
+    auto_test,
+    "mpg01"
+ )
+# [1] 87.19008, or a test error of 12.80992
 
 # 12.
 Power <- function() {
