@@ -240,3 +240,46 @@ PlotPower <- function(x, a) {
     plot(x=x, y=Power3(x,a))
 }
 PlotPower(1:10, 2)
+
+# 13.
+high_crime <- (Boston$crim > median(Boston$crim))
+Boston_with_high_crim <- data.frame(Boston, high_crime)
+
+train <- rownames(Boston_with_high_crim) < 300
+training_data <- Boston_with_high_crim[train,]
+test_data <- Boston_with_high_crim[!train,]
+
+assess_model_predictions(
+    lda(high_crime~nox,data=Boston_with_high_crim,subset=train),
+    test_data=test_data,
+    "high_crime"
+)
+# [1] 86.17021
+
+assess_model_predictions(
+    qda(high_crime~nox,data=Boston_with_high_crim,subset=train),
+    test_data=test_data,
+    "high_crime"
+)
+# [1] 86.17021
+
+log.boston_trained <- glm(high_crime~nox,family="binomial",data=Boston_with_high_crim,subset=train)
+log.probs <- predict(log.boston_trained,type="response")
+log.predictions <- rep(FALSE, dim(test_data)[1])
+log.predictions[log.probs > 0.5] = TRUE
+confusion_matrix <- table(log.predictions, test_data$high_crime, dnn=c('predictions', 'actual'))
+confusion_matrix
+pct_of_correct_predictions(confusion_matrix)
+# [1] 36.52482
+
+require(class)
+train.X <- data.frame(Boston_with_high_crim[train,]$high_crime)
+test.X <- data.frame(Boston_with_high_crim[!train,]$high_crime)
+train.high_crime <- Boston_with_high_crim[train,]$high_crime
+set.seed(1)
+knn.predictions <- knn(train.X, test.X, train.high_crime, k=1)
+confusion_matrix <- table(knn.predictions, test_data$high_crime, dnn=c('predictions', 'actual'))
+confusion_matrix
+pct_of_correct_predictions(confusion_matrix)
+# [1] 100
+# Could this be right ? KNN gets 100% accuracy? I must be doing something wrong.
