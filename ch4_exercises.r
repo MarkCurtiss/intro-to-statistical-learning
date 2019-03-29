@@ -22,7 +22,7 @@
 # See also pg. 150: "In contrast, QDA is recommended if the training set is very large, so that
 # the variance of the classifier is not a major concern..."
 # d)
-# False.  We may achieve a better error training rate using QDA but we can't assume a better test
+# False.  We may achieve a better training error rate using QDA but we can't assume a better test
 # error rate, as QDA is likely to overfit the training data.
 
 # 6.
@@ -48,13 +48,13 @@ predicted_probability(.8, .2, 4, 36, 10, 0)
 # [1] 0.7518525
 
 # 8.
-# The KNN classifier will have a 0% training error rate and thus it had a 36% test error rate.
+# The KNN classifier will have a 0% training error rate and thus it has a 36% test error rate.
 # This means we should use logistic regression with its 30% test error rate.
 
 
 # 9.
-(0.37)/(1-0.37)
-# 0.5873016, or 37 in 63 will default.
+.37 = (0.37)/(1-0.37)
+# 0.5873016, or 37 in 63 will default. WRONG
 .16/(1-.16)
 # b) 0.1904762, or 4 in 21
 
@@ -167,7 +167,7 @@ assess_model_predictions(qda(Direction~Lag2+Today,data=Weekly,subset=train), tes
 # i) It's cheating, but I can get above 95% if I include 'Today'!
 # [1] 96.15385.
 # [1] 98.07692
-# Seriously though.  I tried using knn at a wide variety of n and I also tried squaring, rooting, logging,
+# Seriously though.  I tried using knn at a wide variety of k and I also tried squaring, rooting, logging,
 # and interacting various combinations of variables and I couldn't improve on lda(Direction~Lag2) or
 # qda(Direction~Lag2).
 
@@ -273,13 +273,13 @@ pct_of_correct_predictions(confusion_matrix)
 # [1] 36.52482
 
 require(class)
-train.X <- data.frame(Boston_with_high_crim[train,]$high_crime)
-test.X <- data.frame(Boston_with_high_crim[!train,]$high_crime)
+train.X <- data.frame(Boston_with_high_crim[train,]$nox)
+test.X <- data.frame(Boston_with_high_crim[!train,]$nox)
 train.high_crime <- Boston_with_high_crim[train,]$high_crime
 set.seed(1)
 knn.predictions <- knn(train.X, test.X, train.high_crime, k=1)
 confusion_matrix <- table(knn.predictions, test_data$high_crime, dnn=c('predictions', 'actual'))
 confusion_matrix
 pct_of_correct_predictions(confusion_matrix)
-# [1] 100
-# Could this be right ? KNN gets 100% accuracy? I must be doing something wrong.
+
+# [1] 83.33333
