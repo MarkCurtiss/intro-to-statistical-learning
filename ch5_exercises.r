@@ -38,7 +38,7 @@ plot(x, 1-(1-1/x)^x)
 
 # 3.
 # a)
-# You take slice up your dataset into k slices.  For each slice,# you
+# You slice up your dataset into k slices.  For each slice, you
 # fit your model to the slice and then test it against the remainder
 # of the data.  You average the MSE across all K fits.
 # b)
@@ -57,18 +57,18 @@ train <- sample(10000, 1000)
 lm.fit <- glm(default~income+balance,family="binomial",data=Default,subset=train)
 
 # b)
-log.probs <- predict(lm.fit,type="response")
+log.probs <- predict(lm.fit,type="response", Default[-train,])
 log.predictions <- rep("No", length(log.probs))
 log.predictions[log.probs > 0.5] = "Yes"
 mean(log.predictions!=Default[-train,]$default) * 100
-# [1] 4.422222
+# [1] 2.677778
 
 # c)
 error_rates <- rep(3)
 for (i in 1:3) {
   train <- sample(10000, 1000)
   lm.fit <- glm(default~income+balance,family="binomial",data=Default,subset=train)
-  log.probs <- predict(lm.fit,type="response")
+  log.probs <- predict(lm.fit,type="response", Default[-train,])
   log.predictions <- rep("No", length(log.probs))
   log.predictions[log.probs > 0.5] = "Yes"
   error_rates[i] <- mean(log.predictions!=Default[-train,]$default) * 100
@@ -76,21 +76,21 @@ for (i in 1:3) {
 
 error_rates
 # I think this is an easy data set to predict, since nearly all values are "No"
-# [1] 5.088889 4.377778 4.688889
+# [1] 2.744444 2.711111 2.677778
 
 # d)
 error_rates <- rep(3)
 for (i in 1:3) {
   train <- sample(10000, 1000)
   lm.fit <- glm(default~income+balance+student, family="binomial", data=Default, subset=train)
-  log.probs <- predict(lm.fit,type="response")
+  log.probs <- predict(lm.fit,type="response", Default[-train,])
   log.predictions <- rep("No", length(log.probs))
   log.predictions[log.probs > 0.5] = "Yes"
   error_rates[i] <- mean(log.predictions!=Default[-train,]$default) * 100
 }
 error_rates
 # This doesn't appear to improve the error rate?
-# [1] 5.266667 4.800000 4.333333
+# [1] 2.677778 2.800000 2.833333
 
 # 6.
 set.seed(1)
@@ -126,3 +126,55 @@ boot(Default, boot.fn, R=1000)
 
 # d)
 # The std errors are pretty close!
+
+#9.
+# a)
+library(MASS)
+mean(Boston$medv)
+# [1] 22.53281
+
+# b)
+sd(Boston$medv) / sqrt(nrow(Boston))
+# [1] 0.4088611
+
+# c)
+boot.fn <- function(dataset, observations) {
+    return(mean(dataset[observations,]$medv))
+}
+boot(Boston, boot.fn, R=1000)
+# t1* 22.53281 -0.02078893   0.3954794
+# mean of x
+#  22.53281
+
+# d)
+c(22.53281 - (2 * 0.3954794),
+  22.53281 + (2 * 0.3954794))
+# [1] 21.74185 23.32377
+
+# e)
+# median(Boston$medv)
+# [1] 21.2
+
+# f)
+boot.fn <- function(dataset, observations) {
+    return(median(dataset[observations,]$medv))
+}
+boot(Boston, boot.fn, R=1000)
+# Bootstrap Statistics :
+#     original   bias    std. error
+# t1*     21.2 -0.01825      0.3758
+
+# I find a standard error of 0.3758
+
+# g)
+quantile(Boston$medv, seq(0,1,.10))[2]
+# 12.75%
+
+# h)
+boot.fn <- function(dataset, observations) {
+    return(median(quantile(dataset[observations,]$medv, .10)))
+}
+boot(Boston, boot.fn, R=1000)
+#     original  bias    std. error
+# t1*    12.75  0.0172   0.5005144
+# It is the same.
