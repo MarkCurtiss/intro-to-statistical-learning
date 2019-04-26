@@ -167,3 +167,24 @@ pls.pred <- predict(pls.fit, x[test,], ncomp=2)
 mean((pls.pred - y.test)^2)
 pls.fit <- plsr(Salary~., data=Hitters, scale=TRUE, ncomp=2)
 summary(pls.fit)
+
+
+# 8
+# a)
+set.seed(1)
+X <- rnorm(100)
+noise <- rnorm(100)
+# b)
+Y <- 1+2*X+3*X^2+3*X^3+noise
+# c)
+data.full <- data.frame(X, Y)
+regfit <- regsubsets(Y~poly(X,10), data.full, nvmax=10)
+par(mfrow=c(2,2))
+plot(regfit, scale="adjr2")
+plot(regfit, scale="Cp")
+plot(regfit, scale="bic")
+coef(regfit,3)
+# (Intercept) poly(X, 10)1 poly(X, 10)2 poly(X, 10)3
+#    4.243527    86.765815    41.923436    45.183672
+
+# d)
