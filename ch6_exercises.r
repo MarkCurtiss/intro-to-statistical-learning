@@ -188,3 +188,50 @@ coef(regfit,3)
 #    4.243527    86.765815    41.923436    45.183672
 
 # d)
+regfit.fwd <- regsubsets(Y~poly(X,10), data.full, nvmax=10)
+
+plot(regfit.fwd, scale="adjr2")
+plot(regfit.fwd, scale="Cp")
+plot(regfit.fwd, scale="bic")
+coef(regfit.fwd, 3)
+graphics.off()
+## (Intercept) poly(X, 10)1 poly(X, 10)2 poly(X, 10)3
+##    4.243527    86.765815    41.923436    45.183672
+
+regfit.back <- regsubsets(Y~poly(X,10), data.full, nvmax=10)
+par(mfrow=c(2,2))
+plot(regfit.back, scale="adjr2")
+plot(regfit.back, scale="Cp")
+plot(regfit.back, scale="bic")
+coef(regfit.back, 3)
+graphics.off()
+## (Intercept) poly(X, 10)1 poly(X, 10)2 poly(X, 10)3
+##    4.243527    86.765815    41.923436    45.183672
+
+# e)
+set.seed(1)
+x_data <- poly(X,10,simple=TRUE)
+lasso.model <- glmnet(x_data, Y, alpha=1)
+plot(lasso.model)
+
+cv.model <- cv.glmnet(x_data, Y, alpha=1)
+cv.model$lambda.min
+# [1] 0.03266677
+plot(cv.model)
+out <- glmnet(x_data, Y, alpha=1)
+lasso.predictions <- predict(out, type="coefficients", s=cv.model$lambda.min)
+lasso.predictions
+# The resulting model has 7 variables with the following coefficient estimates:
+11 x 1 sparse Matrix of class "dgCMatrix"
+##                        1
+## (Intercept)  4.243526722
+## 1           86.439147362
+## 2           41.596767988
+## 3           44.857004182
+## 4            0.930427281
+## 5            1.153520639
+## 6            .
+## 7           -0.003098054
+## 8            .
+## 9            .
+## 10          -0.624561786
