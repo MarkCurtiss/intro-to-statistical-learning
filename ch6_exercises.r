@@ -143,7 +143,7 @@ cv.ridge.regression <- cv.glmnet(x[training_index,], y[training_index], alpha=0)
 bestlam <- cv.ridge.regression$lambda.min
 ridge.regression.predictions <- predict(ridge.regression, s=bestlam, newx=x[test_index,])
 mean((ridge.regression.predictions - y[test_index])^2)
-# [1] 1026565
+# [1] 1606428
 
 # d)
 set.seed(1)
@@ -152,29 +152,34 @@ cv.lasso.regression <- cv.glmnet(x[training_index,], y[training_index], alpha=1)
 lasso.bestlam <- cv.lasso.regression$lambda.min
 lasso.predictions <- predict(lasso.regression, s=lasso.bestlam, newx=x[test_index,])
 mean((lasso.predictions - y[test_index])^2)
-# [1] 1040195
+# [1] 1342541
+
 lasso.out <- glmnet(x, y, alpha=1)
 lasso.coeff <- predict(lasso.out, type="coefficients", s=bestlam)
 length(lasso.coeff[lasso.coeff != 0])
 # [1] 4
 
 # e)
+set.seed(1)
 pcr.fit <- pcr(Apps~., data=College, scale=TRUE, subset=training_index, validation="CV")
 validationplot(pcr.fit, val.type="MSEP")
-# get that M value, then
-pcr.pred <- predict(pcr.fit, College[test_index,] ncomp=7)
+# M = 16
+pcr.pred <- predict(pcr.fit, College[test_index,], ncomp=16)
 mean((pcr.pred - y[test_index])^2)
-# [1] 1166897
+# [1] 1434547
 
 # f)
+set.seed(1)
 pls.fit <- plsr(Apps~., data=College, scale=TRUE, subset=training_index, validation="CV")
 summary(pls.fit)
-# M = 14
-pls.pred <- predict(pls.fit, College[test_index,], ncomp=14)
+validationplot(pls.fit, val.type="MSEP")
+# M = 5
+pls.pred <- predict(pls.fit, College[test_index,], ncomp=5)
 mean((pls.pred -> y[test_index])^2)
-# [1] 19104375
+# [1] 20833787
 
 # g)
 Not very accurately !
-Ridge regression gave us the best results but the lasso gave us the simplest model.
+The lasso gave us the best results and the simplest model.
+
 
