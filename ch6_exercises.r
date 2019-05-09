@@ -137,26 +137,44 @@ lm_test_error
 y <- College$Apps
 x <- model.matrix(Apps~.,College)
 training_index <- sample(1:nrow(x), nrow(x)/2)
-test_index <- (-train)
+test_index <- (-training_index)
 ridge.regression <- glmnet(x, y, alpha=0)
-cv.ridge.regression <- cv.glmnet(x[training_college,], y[training_college], alpha=0)
+cv.ridge.regression <- cv.glmnet(x[training_index,], y[training_index], alpha=0)
 bestlam <- cv.ridge.regression$lambda.min
 ridge.regression.predictions <- predict(ridge.regression, s=bestlam, newx=x[test_index,])
 mean((ridge.regression.predictions - y[test_index])^2)
-# [1] 1424201
+# [1] 1026565
 
 # d)
 set.seed(1)
-lasso.regression <- glmnet(x[training_college,], y[training_college], alpha=1)
-cv.lasso.regression <- cv.glmnet(x[training_college,], y[training_college], alpha=1)
+lasso.regression <- glmnet(x[training_index,], y[training_index], alpha=1)
+cv.lasso.regression <- cv.glmnet(x[training_index,], y[training_index], alpha=1)
 lasso.bestlam <- cv.lasso.regression$lambda.min
 lasso.predictions <- predict(lasso.regression, s=lasso.bestlam, newx=x[test_index,])
 mean((lasso.predictions - y[test_index])^2)
-# [1] 1328362
+# [1] 1040195
 lasso.out <- glmnet(x, y, alpha=1)
 lasso.coeff <- predict(lasso.out, type="coefficients", s=bestlam)
 length(lasso.coeff[lasso.coeff != 0])
 # [1] 4
 
-
 # e)
+pcr.fit <- pcr(Apps~., data=College, scale=TRUE, subset=training_index, validation="CV")
+validationplot(pcr.fit, val.type="MSEP")
+# get that M value, then
+pcr.pred <- predict(pcr.fit, College[test_index,] ncomp=7)
+mean((pcr.pred - y[test_index])^2)
+# [1] 1166897
+
+# f)
+pls.fit <- plsr(Apps~., data=College, scale=TRUE, subset=training_index, validation="CV")
+summary(pls.fit)
+# M = 14
+pls.pred <- predict(pls.fit, College[test_index,], ncomp=14)
+mean((pls.pred -> y[test_index])^2)
+# [1] 19104375
+
+# g)
+Not very accurately !
+Ridge regression gave us the best results but the lasso gave us the simplest model.
+
