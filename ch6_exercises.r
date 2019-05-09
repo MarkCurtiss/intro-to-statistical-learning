@@ -128,3 +128,35 @@ test_college <- (!training_college)
 
 # b)
 lm.fit <- lm(Apps~.,data=College[training_college,])
+predictions <- predict(lm.fit, newdata=College[test_college,])
+lm_test_error <- mean((College[test_college,]$Apps - predictions)^2)
+lm_test_error
+# [1] 1520331
+
+# c)
+y <- College$Apps
+x <- model.matrix(Apps~.,College)
+training_index <- sample(1:nrow(x), nrow(x)/2)
+test_index <- (-train)
+ridge.regression <- glmnet(x, y, alpha=0)
+cv.ridge.regression <- cv.glmnet(x[training_college,], y[training_college], alpha=0)
+bestlam <- cv.ridge.regression$lambda.min
+ridge.regression.predictions <- predict(ridge.regression, s=bestlam, newx=x[test_index,])
+mean((ridge.regression.predictions - y[test_index])^2)
+# [1] 1424201
+
+# d)
+set.seed(1)
+lasso.regression <- glmnet(x[training_college,], y[training_college], alpha=1)
+cv.lasso.regression <- cv.glmnet(x[training_college,], y[training_college], alpha=1)
+lasso.bestlam <- cv.lasso.regression$lambda.min
+lasso.predictions <- predict(lasso.regression, s=lasso.bestlam, newx=x[test_index,])
+mean((lasso.predictions - y[test_index])^2)
+# [1] 1328362
+lasso.out <- glmnet(x, y, alpha=1)
+lasso.coeff <- predict(lasso.out, type="coefficients", s=bestlam)
+length(lasso.coeff[lasso.coeff != 0])
+# [1] 4
+
+
+# e)
