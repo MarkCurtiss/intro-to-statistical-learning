@@ -34,23 +34,25 @@ coef(regfit,3)
 #    4.243527    86.765815    41.923436    45.183672
 
 # d)
-regfit.fwd <- regsubsets(Y~poly(X,10), data.full, nvmax=10)
+regfit.fwd <- regsubsets(Y~poly(X,10), data.full, nvmax=10, method="forward")
 
+graphics.off()
+par(mfrow=c(2,2))
 plot(regfit.fwd, scale="adjr2")
 plot(regfit.fwd, scale="Cp")
 plot(regfit.fwd, scale="bic")
 coef(regfit.fwd, 3)
-graphics.off()
+
 ## (Intercept) poly(X, 10)1 poly(X, 10)2 poly(X, 10)3
 ##    4.243527    86.765815    41.923436    45.183672
 
-regfit.back <- regsubsets(Y~poly(X,10), data.full, nvmax=10)
+regfit.back <- regsubsets(Y~poly(X,10), data.full, nvmax=10, method="backward")
+graphics.off()
 par(mfrow=c(2,2))
 plot(regfit.back, scale="adjr2")
 plot(regfit.back, scale="Cp")
 plot(regfit.back, scale="bic")
 coef(regfit.back, 3)
-graphics.off()
 ## (Intercept) poly(X, 10)1 poly(X, 10)2 poly(X, 10)3
 ##    4.243527    86.765815    41.923436    45.183672
 
@@ -182,4 +184,44 @@ mean((pls.pred -> y[test_index])^2)
 Not very accurately !
 The lasso gave us the best results and the simplest model.
 
+# 11. We will now try to predict per capita crime rate in the Boston data set.
+library(MASS)
 
+# a) Try out some of the regression methods explored in this chapter, such as best subset selection, the lasso,
+# ridge regression, and PCR.  Present and discuss the results for the approaches you want to consider.
+# I'm going to try ridge regression
+
+# b) Propose a model (or a set of models) that seem to perform well on this data set, and justify your answer.
+# Make sure that you are evaluating model performance using validation set error, cross validation, or some
+# other reasonable alternative, as opposed to using training error.
+set.seed(1)
+crim_response <- Boston$crim
+crim_data <- model.matrix(crim~.,Boston)
+
+train <- sample(1:nrow(crim_data), nrow(crim_data)/2)
+test <- (-train)
+crim.ridge.regression <- glmnet(crim_data, crim_response, alpha=0)
+cv.crim.ridge.regression <- cv.glmnet(crim_data[train,], y[train], alpha=0)
+
+crim.bestlam <- cv.ridge.regression$lambda.min
+crim.bestlam
+# [1] 370.1552
+
+crim.ridge.regression.predictions <- predict(crim.ridge.regression, s=bestlam, newx=crim_data[test,])
+mean((crim.ridge.regression.predictions - crim_response[test])^2)
+# [1] 63.60747
+
+crim.lasso <- glmnet(crim_data, crim_response, alpha=1)
+cv.crim.lasso <- cv.glmnet(crim_data[train,], crim_response[train], alpha=1)
+crim.lasso.bestlam <- cv.crim.lasso$lambda.min
+crim.lasso.bestlam
+
+crim.lasso.predictions <- predict(crim.lasso, s=crim.lasso.bestlam, newx=crim_data[test,])
+mean((crim.lasso.predictions - crim_response[test])^2)
+# [1] 37.67654
+
+# c) Does your chosen model involve all of the features in the data set?  Why or why not?
+crim.lasso.out <- glmnet(crim_data, crim_response, alpha=1)
+crim.lasso.coeff <- predict(crim.lasso.out, type="coefficients", s=crim.lasso.bestlam)
+length(crim.lasso.coeff[crim.lasso.coeff != 0])
+# No it doesn't.
