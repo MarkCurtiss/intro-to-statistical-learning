@@ -136,16 +136,17 @@ lm_test_error
 # [1] 1520331
 
 # c)
+set.seed(1)
 y <- College$Apps
 x <- model.matrix(Apps~.,College)
 training_index <- sample(1:nrow(x), nrow(x)/2)
 test_index <- (-training_index)
-ridge.regression <- glmnet(x, y, alpha=0)
+ridge.regression <- glmnet(x[training_index,], y[training_index], alpha=0)
 cv.ridge.regression <- cv.glmnet(x[training_index,], y[training_index], alpha=0)
 bestlam <- cv.ridge.regression$lambda.min
 ridge.regression.predictions <- predict(ridge.regression, s=bestlam, newx=x[test_index,])
 mean((ridge.regression.predictions - y[test_index])^2)
-# [1] 1606428
+# [1] 1037616
 
 # d)
 set.seed(1)
@@ -154,7 +155,7 @@ cv.lasso.regression <- cv.glmnet(x[training_index,], y[training_index], alpha=1)
 lasso.bestlam <- cv.lasso.regression$lambda.min
 lasso.predictions <- predict(lasso.regression, s=lasso.bestlam, newx=x[test_index,])
 mean((lasso.predictions - y[test_index])^2)
-# [1] 1342541
+## [1] 1030941
 
 lasso.out <- glmnet(x, y, alpha=1)
 lasso.coeff <- predict(lasso.out, type="coefficients", s=bestlam)
@@ -168,7 +169,8 @@ validationplot(pcr.fit, val.type="MSEP")
 # M = 16
 pcr.pred <- predict(pcr.fit, College[test_index,], ncomp=16)
 mean((pcr.pred - y[test_index])^2)
-# [1] 1434547
+# [1] 1166897
+
 
 # f)
 set.seed(1)
@@ -176,52 +178,47 @@ pls.fit <- plsr(Apps~., data=College, scale=TRUE, subset=training_index, validat
 summary(pls.fit)
 validationplot(pls.fit, val.type="MSEP")
 # M = 5
-pls.pred <- predict(pls.fit, College[test_index,], ncomp=5)
-mean((pls.pred -> y[test_index])^2)
-# [1] 20833787
+pls.pred <- predict(pls.fit, College[test_index,], ncomp=10)
+mean((pls.pred - y[test_index])^2)
+# [1] 94781.96
 
 # g)
-Not very accurately !
-The lasso gave us the best results and the simplest model.
+Not very accurately ! PLS gave us the best results and the simplest model.
 
 # 11. We will now try to predict per capita crime rate in the Boston data set.
 library(MASS)
 
-# a) Try out some of the regression methods explored in this chapter, such as best subset selection, the lasso,
-# ridge regression, and PCR.  Present and discuss the results for the approaches you want to consider.
-# I'm going to try ridge regression
-
-# b) Propose a model (or a set of models) that seem to perform well on this data set, and justify your answer.
-# Make sure that you are evaluating model performance using validation set error, cross validation, or some
-# other reasonable alternative, as opposed to using training error.
 set.seed(1)
 crim_response <- Boston$crim
 crim_data <- model.matrix(crim~.,Boston)
 
 train <- sample(1:nrow(crim_data), nrow(crim_data)/2)
 test <- (-train)
-crim.ridge.regression <- glmnet(crim_data, crim_response, alpha=0)
+crim.ridge.regression <- glmnet(crim_data[train,], crim_response[train], alpha=0)
 cv.crim.ridge.regression <- cv.glmnet(crim_data[train,], y[train], alpha=0)
 
 crim.bestlam <- cv.ridge.regression$lambda.min
 crim.bestlam
-# [1] 370.1552
+# [1] 450.7435
 
 crim.ridge.regression.predictions <- predict(crim.ridge.regression, s=bestlam, newx=crim_data[test,])
 mean((crim.ridge.regression.predictions - crim_response[test])^2)
-# [1] 63.60747
+# [1] 64.35631
 
-crim.lasso <- glmnet(crim_data, crim_response, alpha=1)
+
+set.seed(1)
+crim.lasso <- glmnet(crim_data[train,], crim_response[train], alpha=1)
 cv.crim.lasso <- cv.glmnet(crim_data[train,], crim_response[train], alpha=1)
 crim.lasso.bestlam <- cv.crim.lasso$lambda.min
 crim.lasso.bestlam
+# [1] 0.09979553
 
 crim.lasso.predictions <- predict(crim.lasso, s=crim.lasso.bestlam, newx=crim_data[test,])
 mean((crim.lasso.predictions - crim_response[test])^2)
-# [1] 37.67654
+# [1] 38.31114
 
 # c) Does your chosen model involve all of the features in the data set?  Why or why not?
 crim.lasso.out <- glmnet(crim_data, crim_response, alpha=1)
 crim.lasso.coeff <- predict(crim.lasso.out, type="coefficients", s=crim.lasso.bestlam)
 length(crim.lasso.coeff[crim.lasso.coeff != 0])
-# No it doesn't.
+# No it doesn't.  It uses 12 of the 14 features
