@@ -61,3 +61,8 @@ error_rates_by_cut
 min(error_rates_by_cut[-1])
 ## [1] 4585.585
 # 3 cuts is the coolest number of cuts
+
+# 7. The Wage data set contains a number of other features not explored in this chapter, such as marital status
+# (maritl), job class (jobclass), and others.  Explore the relationship between some of these other predictors
+# and wage, and use non-linear fitting techniques in order to fit flexible models to the data.  Create plots
+# of the results obtained, and write a summary of your findings.
