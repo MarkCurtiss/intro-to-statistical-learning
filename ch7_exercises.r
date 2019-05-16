@@ -66,3 +66,12 @@ min(error_rates_by_cut[-1])
 # (maritl), job class (jobclass), and others.  Explore the relationship between some of these other predictors
 # and wage, and use non-linear fitting techniques in order to fit flexible models to the data.  Create plots
 # of the results obtained, and write a summary of your findings.
+
+library(splines)
+install.packages('gam')
+install.packages('akima')
+library(gam)
+library(akima)
+
+gam.lr <- gam(I(wage>250)~s(year,df=3)+s(age,df=5), family=binomial, data=Wage)
+plot(gam.lr, se=TRUE)
