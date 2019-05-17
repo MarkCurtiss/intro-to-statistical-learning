@@ -5,20 +5,26 @@
 # testing using ANOVA?  Make a plot of the resulting polynomial fit to the data.
 
 library(ISLR)
+library(boot)
 
 set.seed(1)
 error_rates <- rep(0,6)
 
 for (i in 1:6) {
-    train <- sample(dim(Wage)[1], 1500)
-    wage_by_age.fit <- lm(wage~poly(age,i,raw=TRUE), data=Wage[train,])
-    wage_by_age.predictions <- predict(wage_by_age.fit, newdata=Wage)
-    error_rates[i] <- mean((wage_by_age.predictions - Wage$age)^2)
+    wage_by_age.fit <- glm(wage~poly(age,i,raw=TRUE), data=Wage)
+    error_rates[i] <- cv.glm(Wage, wage_by_age.fit, K=10)$delta[1]
 }
 error_rates
 
-# [1] 4753.035 4941.360 4853.229 4678.132 4807.466 4907.984
+# [1] 1675.882 1602.562 1597.223 1595.184 1599.612 1596.589
 # Degree 4 was chosen (the quartic polynomial)
+
+
+best.fit <- glm(wage~poly(age,4,raw=TRUE),data=Wage)
+sorted_ages <- sort(unique(Wage$age))
+predictions <- predict(best.fit, newdata=data.frame(age=sorted_ages))
+plot(Wage$age, Wage$wage)
+lines(sorted_ages, predictions, col="red")
 
 
 fit.1 <- lm(wage~age, data=Wage)
@@ -49,18 +55,17 @@ num_cuts_to_try <- 10
 error_rates_by_cut <- rep(0, num_cuts_to_try)
 
 for (i in 2:num_cuts_to_try) {
-        paste("now trying ", i)
-    train <- sample(dim(Wage)[1], 1500)
-    wage_by_age.fit <- lm(wage~cut(age,i), data=Wage[train,])
-    wage_by_age.predictions <- predict(wage_by_age.fit, newdata=Wage)
-    error_rates_by_cut[i] <- mean((wage_by_age.predictions - Wage$age)^2)
+    Wage$age.cut <- cut(Wage$age, i)
+    wage_by_age.fit <- glm(wage~age.cut, data=Wage)
+    error_rates_by_cut[i] <- cv.glm(Wage, wage_by_age.fit, K=10)$delta[1]
 }
 error_rates_by_cut
-# [1]    0.000 4826.944 4765.125 4585.585 4823.932 4790.949 4948.497 4945.938
-# [9] 4852.716 4885.233
+ [1]    0.000 1735.051 1682.455 1635.132 1633.602 1622.005 1611.415 1602.668
+ [9] 1609.955 1603.193
 min(error_rates_by_cut[-1])
-## [1] 4585.585
-# 3 cuts is the coolest number of cuts
+# [1] 1602.668
+# 8 is the coolest number of cuts
+
 
 # 7. The Wage data set contains a number of other features not explored in this chapter, such as marital status
 # (maritl), job class (jobclass), and others.  Explore the relationship between some of these other predictors
@@ -72,6 +77,7 @@ install.packages('gam')
 install.packages('akima')
 library(gam)
 library(akima)
-
-gam.lr <- gam(I(wage>250)~s(year,df=3)+s(age,df=5), family=binomial, data=Wage)
+# look at the examples that use lo()
+gam.fit <- gam(wage~poly(age,4)+maritl+jobclass, data=Wage)
+plot(Wage$wage, Wage$maritl, Wage$jobclass)
 plot(gam.lr, se=TRUE)
