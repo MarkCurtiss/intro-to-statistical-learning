@@ -77,7 +77,28 @@ install.packages('gam')
 install.packages('akima')
 library(gam)
 library(akima)
-# look at the examples that use lo()
-gam.fit <- gam(wage~poly(age,4)+maritl+jobclass, data=Wage)
-plot(Wage$wage, Wage$maritl, Wage$jobclass)
-plot(gam.lr, se=TRUE)
+gam.fit <- gam(wage~maritl+jobclass+s(age,4), data=Wage)
+plot.Gam(gam.fit)
+
+# 8. Fit some of the non-linear models investigated in this chapter to the Auto data set.  Is there evidence
+# for non-linear relationships in this data set?  Create some informative plots to justify your answer.
+spline.fit <- glm(mpg~s(horsepower,4)+s(weight,4)+s(displacement,4),data=Auto)
+error_rate <- cv.glm(Auto, spline.fit, K=10)$delta[1]
+plot(spline.fit)
+
+lm.fit <- lm(mpg~horsepower,data=Auto)
+spline.fit <- glm(mpg~ns(horsepower,4), data=Auto)
+lm.line <- data.frame(Auto$horsepower, predict(lm.fit, newdata=Auto))
+spline.line <- data.frame(Auto$horsepower, predict(spline.fit, newdata=Auto))
+plot(Auto$horsepower, Auto$mpg)
+lines(sort(Auto$horsepower), sort(predict(lm.fit, newdata=Auto)), col="blue")
+abline(lm.fit, col="blue")
+abline(spline.fit, col="red")
+lines(
+        sort(predict(spline.fit, newdata=Auto)),
+       sort(Auto$horsepower),
+        col="red"
+)
+lines(c(0,0), c(80,160), lwd=8, col="red")
+abline(spline.line, col="red")
+# ha ha why can't I graph this spline??!
