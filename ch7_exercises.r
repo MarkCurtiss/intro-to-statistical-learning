@@ -102,3 +102,39 @@ lines(
 lines(c(0,0), c(80,160), lwd=8, col="red")
 abline(spline.line, col="red")
 # ha ha why can't I graph this spline??!
+
+# 9. This question uses the variables dis (the weighted mean of distances to five Boston employment centers)
+# and nox (nitrogen oxides concentration in parts per 10 million) from the Boston data. We will treat dis as
+# the predictor and nox as the response.
+# a) Use the poly() function to fit a cubic polynomial regression to predict nox using dis. Report the regression output, and plot the resulting data and polynomial fits.
+
+library(MASS)
+poly.fit <- glm(nox~poly(dis, 3, raw=TRUE), data=Boston)
+summary(poly.fit)
+
+plot(Boston$dis, Boston$nox)
+x <- seq(min(Boston$dis), max(Boston$dis))
+y <- predict(poly.fit, newdata=data.frame(dis=x))
+
+lines(x,y,col="red")
+## x <- sort(sample(Boston$dis, 100))
+## y <- predict(poly.fit, newdata=data.frame(dis=x))
+## lines(x,y, col="red")
+
+# b) Plot the polynomial fits for a range of different polynomial degrees (say, from 1 to 10), and report
+# the associated residual sum of squares.
+
+set.seed(1)
+error_rates <- rep(0,10)
+
+for (i in 1:10) {
+    nox_by_dis.fit <- glm(nox~poly(dis, i, raw=TRUE), data=Boston)
+    plot(Boston$dis, Boston$nox, main=paste("polynomial fit of degree",i))
+    x <- seq(min(Boston$dis), max(Boston$dis))
+    y <- predict(nox_by_dis.fit, newdata=data.frame(dis=x))
+    lines(x,y,col="red")
+    ## readline(prompt=paste("polynomial fit of degree", i))
+    Sys.sleep(2)
+    error_rates[i] <- mean((nox_by_dis.fit$fitted.values - Boston$nox)^2)
+}
+error_rates
