@@ -202,3 +202,38 @@ for (i in 1:10) {
 cv.spline.error_rates
 min(cv.spline.error_rates)
 # This picked a cubic spline (although it also emitted a bunch of warnings)
+# 10.This question relates to the College data set.
+# a) Split the data into a training set and a test set. Using out-of-state tuition as the response
+# and the other variables as the predictors, perform forward stepwise selection on the training set
+# in order to identify a satisfactory model that uses just a subset of the predictors.
+train <- sample(nrow(College)/2)
+test <- (-train)
+
+library(leaps)
+regfit.fwd <- regsubsets(Outstate~., data=College[test,], nvmax=18, method="forward")
+summary(regfit.fwd)
+
+par(mfrow=c(2,2))
+plot(regfit.fwd, scale="r2")
+plot(regfit.fwd, scale="adjr2")
+plot(regfit.fwd, scale="Cp")
+plot(regfit.fwd, scale="bic")
+coef(regfit.fwd, 10)
+names(coef(regfit.fwd, 10))
+##  [1] "(Intercept)" "PrivateYes"  "Top10perc"   "Room.Board"  "Books"
+##  [6] "PhD"         "Terminal"    "S.F.Ratio"   "perc.alumni" "Expend"
+## [11] "Grad.Rate"
+
+# b) Fit a GAM on the training data, using out-of-state tuition as the response and the features selected in
+# the previous step as the predictors. Plot the results, and explain your findings.
+library(gam)
+gam.fit <- gam(Outstate~PrivateTop10percRoom.BoardBooksPhDTerminalS.F.Ratioperc.alumniExpendGrad.Rate, data=College[train,])
+
+par(mfrow=c(2,5))
+plot.Gam(gam.fit)
+# Ha ha.  I can't explain anything about these plots.  Why are they all straight lines ?
+
+# c) Evaluate the model obtained on the test set, and explain the results obtained.
+predictions <- predict(gam.fit, newdata=College[test,])
+(mean(predictions - College[test,]$Outstate)^2)
+# I guess it is not good!
