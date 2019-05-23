@@ -135,6 +135,70 @@ for (i in 1:10) {
     lines(x,y,col="red")
     ## readline(prompt=paste("polynomial fit of degree", i))
     Sys.sleep(2)
-    error_rates[i] <- mean((nox_by_dis.fit$fitted.values - Boston$nox)^2)
+    error_rates[i] <- sum((nox_by_dis.fit$fitted.values - Boston$nox)^2)
 }
 error_rates
+min(error_rates)
+# R is frustrating.  Why can't I just get the RSS off of the fit's coefficients
+# like I can with other models.  Is it because I used glm() instead of lm()?
+# Is it because I fit a polynomial?
+
+# c) Perform cross-validation or another approach to select the opti mal degree for the polynomial,
+# and explain your results.
+set.seed(1)
+cv.error_rates <- rep(0, 10)
+
+for (i in 1:10) {
+    nox_by_dis.fit <- glm(nox~poly(dis, i, raw=TRUE), data=Boston)
+    cv.error_rates[i] = cv.glm(Boston, nox_by_dis.fit, K=10)$delta[1]
+}
+cv.error_rates
+min(cv.error_rates)
+# huh.  This picked the quartic polynomial.  It must provide the right balance between
+# bias and variance.
+
+# d)  Use the bs() function to fit a regression spline to predict nox using dis.
+# Report the output for the fit using four degrees of freedom. How did you choose the knots? Plot the resulting fit.
+library(splines)
+spline.fit <- glm(nox~bs(dis,degree=4,df=4),data=Boston)
+# Eyeballing "dis", 4 knots looked reasonable..
+summary(spline.fit)
+
+plot(Boston$dis, Boston$nox)
+x <- seq(min(Boston$dis), max(Boston$dis))
+y <- predict(spline.fit, newdata=data.frame(dis=x))
+lines(x,y,col="red")
+
+# e) Now fit a regression spline for a range of degrees of freedom, and plot the resulting fits and report
+# the resulting RSS. Describe the results obtained.
+set.seed(1)
+spline.error_rates <- rep(0,10)
+
+for (i in 1:10) {
+    spline.fit <- glm(nox~bs(dis,degree=i,df=i),data=Boston)
+
+    plot(Boston$dis, Boston$nox, main=paste("regression spline of degree",i))
+    x <- seq(min(Boston$dis), max(Boston$dis))
+    y <- predict(spline.fit, newdata=data.frame(dis=x))
+    lines(x,y,col="red")
+    Sys.sleep(2)
+
+    spline.error_rates[i] <- sum((spline.fit$fitted.values - Boston$nox)^2)
+}
+spline.error_rates
+min(spline.error_rates)
+# the 10-degree spline again !
+
+
+# f) Perform cross-validation or another approach in order to select the best degrees of freedom for a
+# regression spline on this data. Describe your results.
+set.seed(1)
+cv.spline.error_rates <- rep(0, 10)
+
+for (i in 1:10) {
+    spline.fit <- glm(nox~bs(dis,degree=i,df=i),data=Boston)
+    cv.spline.error_rates[i] = cv.glm(Boston, spline.fit, K=10)$delta[1]
+}
+cv.spline.error_rates
+min(cv.spline.error_rates)
+# This picked a cubic spline (although it also emitted a bunch of warnings)
