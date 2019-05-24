@@ -78,28 +78,34 @@ install.packages('akima')
 library(gam)
 library(akima)
 gam.fit <- gam(wage~maritl+jobclass+s(age,4), data=Wage)
+par(mfrow=c(3,1))
 plot.Gam(gam.fit)
 
 # 8. Fit some of the non-linear models investigated in this chapter to the Auto data set.  Is there evidence
 # for non-linear relationships in this data set?  Create some informative plots to justify your answer.
 spline.fit <- glm(mpg~s(horsepower,4)+s(weight,4)+s(displacement,4),data=Auto)
+
 error_rate <- cv.glm(Auto, spline.fit, K=10)$delta[1]
 plot(spline.fit)
 
 lm.fit <- lm(mpg~horsepower,data=Auto)
+
 spline.fit <- glm(mpg~ns(horsepower,4), data=Auto)
+
 lm.line <- data.frame(Auto$horsepower, predict(lm.fit, newdata=Auto))
 spline.line <- data.frame(Auto$horsepower, predict(spline.fit, newdata=Auto))
 plot(Auto$horsepower, Auto$mpg)
 lines(sort(Auto$horsepower), sort(predict(lm.fit, newdata=Auto)), col="blue")
 abline(lm.fit, col="blue")
 abline(spline.fit, col="red")
+sorted_horses <-       sort(Auto$horsepower, decreasing=TRUE)
 lines(
-        sort(predict(spline.fit, newdata=Auto)),
-       sort(Auto$horsepower),
-        col="red"
+   Auto$horsepower,
+  predict(spline.fit, newdata=data.frame(horsepower=sorted_horses)),
+   col="red"
 )
 lines(c(0,0), c(80,160), lwd=8, col="red")
+plot(spline.fit)
 abline(spline.line, col="red")
 # ha ha why can't I graph this spline??!
 
@@ -227,7 +233,7 @@ names(coef(regfit.fwd, 10))
 # b) Fit a GAM on the training data, using out-of-state tuition as the response and the features selected in
 # the previous step as the predictors. Plot the results, and explain your findings.
 library(gam)
-gam.fit <- gam(Outstate~PrivateTop10percRoom.BoardBooksPhDTerminalS.F.Ratioperc.alumniExpendGrad.Rate, data=College[train,])
+gam.fit <- gam(Outstate~Private+Top10perc+Room.Board+Books+PhD+Terminal+S.F.Ratio+perc.alumni+Expend+Grad.Rate, data=College[train,])
 
 par(mfrow=c(2,5))
 plot.Gam(gam.fit)
