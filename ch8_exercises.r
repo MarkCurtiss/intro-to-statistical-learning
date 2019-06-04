@@ -185,3 +185,22 @@ table(prune.predict, oj.test$Purchase)
 1 - (141+70)/(141+44+15+70)
 # 21.8%
 # They are the same !
+
+# 10. We now use boosting to predict Salary in the Hitters data set.
+# (a) Remove the observations for whom the salary information is unknown, and then log-transform the salaries.
+library(ISLR)
+library(gbm)
+
+paid_hitters <- na.omit(Hitters)
+paid_hitters$Salary = log(paid_hitters$Salary)
+
+# (b) Create a training set consisting of the first 200 observations, and a test set consisting of the remaining
+# observations.
+hitters.train <- paid_hitters[1:200,]
+hitters.test <- paid_hitters[201:263,]
+
+set.seed(1)
+
+# (c) Perform boosting on the training set with 1,000 trees for a range of values of the shrinkage parameter λ.
+# Produce a plot with different shrinkage values on the x-axis and the corresponding training set MSE on the y-axis.
+boost.hitters <- gbm(Salary~.,data=paid_hitters, distribution='gaussian', n.trees=1000)
