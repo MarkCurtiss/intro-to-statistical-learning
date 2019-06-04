@@ -110,3 +110,78 @@ carseat.error_rates[8]
 # Increases in m decrease error rate until m = 8.  m = 8 provides a test MSE of 2.072451
 varImpPlot(rf.carseats <- randomForest(Sales~., data=Carseats, subset=carseats.train, mtry=8, importance=TRUE))
 # Price and ShelveLoc are (still) the most important variables
+
+# 9. This problem involves the OJ data set which is part of the ISLR package.
+# (a) Create a training set containing a random sample of 800 observations, and a test set containing
+# the remaining observations.
+
+library(ISLR)
+library(tree)
+oj.train <- sample(800)
+oj.test <- OJ[-oj.train,]
+
+# (b) Fit a tree to the training data, with Purchase as the response and the other variables as predictors.
+# Use the summary() function to produce summary statistics about the tree, and describe the results obtained.
+# What is the training error rate? How many terminal nodes does the tree have?
+tree.oj <- tree(Purchase~.,OJ, subset=oj.train)
+summary(tree.oj)
+# Variables actually used in tree construction:
+# [1] "LoyalCH"   "PriceDiff"
+# Number of terminal nodes:  7
+# Residual mean deviance:  0.7342 = 582.3 / 793
+# Misclassification error rate: 0.165 = 132 / 800
+# 7 terminal nodes with a training error rate of .165
+
+# (c) Type in the name of the tree object in order to get a detailed text output.
+# Pick one of the terminal nodes, and interpret the information displayed.
+tree.oj
+     # 8) LoyalCH < 0.035047 62    0.00 MM ( 0.00000 1.00000 ) *
+# If Loyalty to Citrus Hill is lower than 3% than 100% of customer are predicted to buy Minute Maid.
+
+# (d) Create a plot of the tree, and interpret the results.
+plot(tree.oj)
+text(tree.oj, pretty=FALSE)
+# Very loyal Citrus Hill customers won't buy Minute Maid even if there's a price difference.
+# Moderately loyal Citrus Hill (between .26 and .5) will still buy Minute Maid if it is cheaper.
+# Science reporting is hard!
+
+# (e) Predict the response on the test data, and produce a confusion matrix comparing the test labels to the
+# predicted test labels. What is the test error rate?
+oj.predict <- predict(tree.oj, oj.test, type='class')
+table(oj.predict, oj.test$Purchase)
+# oj.predict  CH  MM
+#         CH 141  44
+#         MM  15  70
+1 - (141+70)/(141+44+15+70)
+# 21.8%
+
+# (f) Apply the cv.tree() function to the training set in order to determine the optimal tree size.
+cv.oj <- cv.tree(tree.oj, FUN=prune.misclass)
+which.min(cv.oj$dev)
+cv.oj$size[which.min(cv.oj$dev)]
+cv.oj$size[which.min(cv.oj$dev)]
+# 7
+
+# (g) Produce a plot with tree size on the x-axis and cross-validated classification error rate on the y-axis.
+plot(cv.oj$size, cv.oj$dev, type='b')
+# (h) Which tree size corresponds to the lowest cross-validated classification error rate?
+# 7
+
+# (i) Produce a pruned tree corresponding to the optimal tree size obtained using cross-validation.
+# If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with five terminal nodes.
+prune.oj <- prune.tree(tree.oj, best=5)
+
+# (j) Compare the training error rates between the pruned and unpruned trees. Which is higher?
+summary(tree.oj)
+summary(prune.oj)
+# They are the same !
+
+# (k) Compare the test error rates between the pruned and unpruned trees. Which is higher?
+prune.predict <- predict(prune.oj, oj.test, type='class')
+table(prune.predict, oj.test$Purchase)
+# oj.predict  CH  MM
+#         CH 141  44
+#         MM  15  70
+1 - (141+70)/(141+44+15+70)
+# 21.8%
+# They are the same !
