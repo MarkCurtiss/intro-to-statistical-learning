@@ -196,11 +196,65 @@ paid_hitters$Salary = log(paid_hitters$Salary)
 
 # (b) Create a training set consisting of the first 200 observations, and a test set consisting of the remaining
 # observations.
+
 hitters.train <- paid_hitters[1:200,]
 hitters.test <- paid_hitters[201:263,]
 
-set.seed(1)
-
 # (c) Perform boosting on the training set with 1,000 trees for a range of values of the shrinkage parameter λ.
 # Produce a plot with different shrinkage values on the x-axis and the corresponding training set MSE on the y-axis.
-boost.hitters <- gbm(Salary~.,data=paid_hitters, distribution='gaussian', n.trees=1000)
+set.seed(1)
+boost.training_error_rates <- rep(1,10)
+shrinkages <- seq(0.001, 0.2, length.out=10)
+
+for (i in 1:10) {
+    boost.hitters <- gbm(Salary~., data=paid_hitters, distribution='gaussian', n.trees=1000, shrinkage=shrinkages[i])
+    boost.training_error_rates[i] = mean(boost.hitters$train.error)
+}
+
+plot(shrinkages, boost.training_error_rates, type='b')
+
+# (d) Produce a plot with different shrinkage values on the x-axis and the corresponding test set MSE on the y-axis.
+set.seed(1)
+boost.test_error_rates <- rep(1,10)
+shrinkages <- seq(0.001, 0.2, length.out=10)
+
+for (i in 1:10) {
+    boost.hitters <- gbm(Salary~., data=paid_hitters, distribution='gaussian', n.trees=1000, shrinkage=shrinkages[i])
+    pred.hitters <- predict(boost.hitters, newdata=hitters.test, n.trees=1000)
+    boost.test_error_rates[i] = mean((pred.hitters - hitters.test$Salary)^2)
+}
+
+plot(shrinkages, boost.test_error_rates, type='b')
+
+# (e) Compare the test MSE of boosting to the test MSE that results from applying two of the regression approaches
+# seen in Chapters 3 and 6.
+lm.hitters <- glm(Salary~., data=paid_hitters, subset=1:200)
+pred.hitters <- predict(lm.hitters, newdata=hitters.test)
+lm.error_rate <- mean((pred.hitters - hitters.test$Salary)^2)
+lm.error_rate > boost.test_error_rates
+# [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+
+install.packages('pls')
+library(pls)
+pcr.hitters <- pcr(Salary~., data=paid_hitters, validation='CV')
+validationplot(pcr.hitters)
+# M = 19
+pcr.pred <- predict(pcr.hitters, hitters.test, ncomp=19)
+pcr.error_rate <- mean((pcr.pred - hitters.test$Salary)^2)
+pcr.error_rate > boost.test_error_rates
+# [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+
+# (f) Which variables appear to be the most important predictors in the boosted model?
+varImpPlot(boost.hitters)
+# This function only works for objects of class `randomForest'
+summary(boost.hitters)
+# CAtBat and Chits
+
+# (g) Now apply bagging to the training set. What is the test set MSE for this approach?
+library(randomForest)
+bag.hitters <- randomForest(Salary~., data=paid_hitters, subset=1:200, mtry=19, importance=TRUE)
+bag.pred <- predict(bag.hitters, newdata=hitters.train)
+mean((bag.pred - hitters.train$Salary)^2)
+# [1] 0.0335809
+mean((bag.pred - hitters.train$Salary)^2) > boost.test_error_rates
+# It's better !
