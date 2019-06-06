@@ -258,3 +258,37 @@ mean((bag.pred - hitters.train$Salary)^2)
 # [1] 0.0335809
 mean((bag.pred - hitters.train$Salary)^2) > boost.test_error_rates
 # It's better !
+
+# 11. This question uses the Caravan data set.
+# (a) Create a training set consisting of the first 1,000 observations, and a test set consisting of the remaining observations.
+set.seed(1)
+Caravan$Purchase = ifelse(Caravan$Purchase == "Yes", 1, 0)
+caravan.train <- Caravan[1:1000,]
+caravan.test <- Caravan[1001:nrow(Caravan),]
+
+# (b) Fit a boosting model to the training set with Purchase as the response and the other variables as predictors.
+# Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?
+boost.caravan <- gbm(Purchase~., data=caravan.train, distribution='bernoulli', n.trees=1000, shrinkage=0.01)
+summary(boost.caravan)
+# PPERSAUT and MKOOPKLA and MOPLHOOG
+
+# (c) Use the boosting model to predict the response on the test data.
+# Predict that a person will make a purchase if the estimated probability of purchase is greater than 20 %.
+# Form a confusion matrix. What fraction of the people predicted to make a purchase do in fact make one?
+# How does this compare with the results obtained from applying KNN or logistic regression to this data set?
+pred.caravan <- predict(boost.caravan, newdata=caravan.test, n.trees=1000, type='response')
+head(pred.caravan)
+pred.purchase = pred.caravan > 0.2
+table(caravan.test$Purchase, pred.purchase)
+#   FALSE TRUE
+# 0  4410  123
+# 1   256   33
+33/(123+33)
+# [1] 0.2115385
+log.caravan <- glm(Purchase~., data=caravan.train, family=binomial)
+log.predict <- predict(log.caravan, caravan.test, type='response')
+log.purchase <- log.predict > 0.2
+table(caravan.test$Purchase, log.purchase)
+58/(350+58)
+# [1] 0.1421569
+# Boosting produced more accurate predictions.
