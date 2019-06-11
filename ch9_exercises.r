@@ -24,6 +24,7 @@ polynomial.svm <- tune(svm, above_avg_mpg~.,
                        data=Auto,
                        kernel='polynomial',
                        ranges=list(degree=c(1,2,3,4,5,6), cost=c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+
 summary(polynomial.svm)
 # - best parameters:
 #  degree cost
@@ -37,3 +38,108 @@ summary(radial.svm)
 # - best parameters:
 #  gamma cost
 # 0.1   10
+# (d) Make some plots to back up your assertions in (b) and (c).
+plot(polynomial.svm$best.model, Auto, mpg~weight)
+polynomial.worst <- svm(above_avg_mpg~., data=Auto, kernel='polynomial', degree=1, cost=0.001)
+plot(polynomial.worst, Auto, mpg~weight)
+
+# polynomial.worst is nearly all support vectors
+
+# 8. This problem involves the OJ data set which is part of the ISLR package.
+# (a) Create a training set containing a random sample of 800 observations, and a test set containing
+# the remaining observations.
+library(ISLR)
+set.seed(1)
+train <- sample(800)
+oj.train <- OJ[train,]
+oj.test <- OJ[-train,]
+
+#(b) Fit a support vector classifier to the training data using cost=0.01, with Purchase as the
+# response and the other variables as predictors. Use the summary() function to produce summary
+# statistics, and describe the results obtained.
+oj.svc <- svm(Purchase~., data=oj.train, kernel='linear', cost=0.01)
+summary(oj.svc)
+
+## Call:
+## svm(formula = Purchase ~ ., data = oj.train, kernel = "linear", cost = 0.01)
+
+
+## Parameters:
+##    SVM-Type:  C-classification
+##  SVM-Kernel:  linear
+##        cost:  0.01
+
+## Number of Support Vectors:  424
+
+##  ( 212 212 )
+
+
+## Number of Classes:  2
+
+## Levels:
+##  CH MM
+
+# (c) What are the training and test error rates?
+svc.train.pred <- predict(oj.svc, oj.train)
+table(svc.train.pred, oj.train$Purchase)
+(448+228)/(448+228+75+49)
+# [1] 0.845
+svc.test.pred <- predict(oj.svc, oj.test)
+table(svc.test.pred, oj.test$Purchase)
+(133+81)/(133+81+33+23)
+# [1] 0.7925926
+
+# (d) Use the tune() function to select an optimal cost. Consider values in the range 0.01 to 10.
+oj.svc.cv <- tune(svm, Purchase~., data=oj.train, kernel='linear',
+                  ranges=list(cost=c(0.01, 0.1, 1, 5, 10)))
+summary(oj.svc.cv)
+# - best parameters:
+#  cost
+#     1
+
+# (e) Compute the training and test error rates using this new value for cost.
+oj.svc.best <- svm(Purchase~., data=oj.train, kernel='linear', cost=1)
+
+svc.best.pred <- predict(oj.svc.best, oj.train)
+table(svc.best.pred, oj.train$Purchase)
+(447+234)/(447+69+50+234)
+# [1] 0.85125
+svc.best.test.pred  <- predict(oj.svc.best, oj.test)
+table(svc.best.test.pred, oj.test$Purchase)
+(134+80)/(134+34+22+80)
+# [1] 0.7925926
+
+# The training error improved slightly but the test error doesn't appear to have changed
+
+# (f) Repeat parts (b) through (e) using a support vector machine with a radial kernel. Use the default value for gamma.
+oj.radial <- tune(svm, Purchase~., data=oj.train, kernel='radial',
+                   ranges=list(cost=c(0.01, 0.1, 1, 5, 10)))$best.model
+
+radial.train.pred <- predict(oj.radial, oj.train)
+table(radial.train.pred, oj.train$Purchase)
+
+pct_of_correct_predictions <- function(predictions, actual) {
+    confusion_matrix <- table(predictions, actual)
+    (
+        (confusion_matrix[1,1] + confusion_matrix[2,2]) / sum(confusion_matrix)
+    ) * 100
+}
+
+pct_of_correct_predictions(radial.train.pred, oj.train$Purchase)
+# [1] 85.125
+radial.test.pred <- predict(oj.radial, oj.test)
+pct_of_correct_predictions(radial.test.pred, oj.test$Purchase)
+# [1] 81.85185
+
+# (g) Repeat parts (b) through (e) using a support vector machine with a polynomial kernel. Set degree=2.
+oj.polynomial <- tune(svm, Purchase~., data=oj.train, kernel='polynomial', degree=2,
+                      ranges=list(cost=c(0.01, 0.1, 1, 5, 10)))$best.model
+polynomial.train.pred <- predict(oj.polynomial, oj.train)
+pct_of_correct_predictions(polynomial.train.pred, oj.train$Purchase)
+# [1] 84.5
+polynomial.test.pred <- predict(oj.polynomial, oj.test)
+pct_of_correct_predictions(polynomial.test.pred, oj.test$Purchase)
+# [1] 81.48148
+
+# (h) Overall, which approach seems to give the best results on this data?
+# SVM with a radial kernel.
