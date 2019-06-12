@@ -1,3 +1,19 @@
+## 5. We have seen that we can fit an SVM with a non-linear kernel in order to perform classification using a non-linear decision boundary. We will now see that we can also obtain a non-linear decision boundary by performing logistic regression using non-linear transformations of the features.
+## (a) Generate a data set with n = 500 and p = 2, such that the observations belong to two classes with a quadratic decision boundary between them. For instance, you can do this as follows:
+x1 <- runif(500)-0.5
+x2 <- runif(500)-0.5
+y <- 1*(x1^2-x2^2 > 0)
+# (b) Plot the observations, colored according to their class labels. Your plot should display X1 on the x-axis, and X2 on the y- axis.
+plot(x1, x2, col=c('red', 'blue'))
+
+# (c) Fit a logistic regression model to the data, using X1 and X2 as predictors.
+linear.model <- glm(y~x1+x2)
+
+## (d) Apply this model to the training data in order to obtain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be linear.
+linear.predictions <- predict(linear.model, as.factor(y))
+
+
+
 # 7. In this problem, you will use support vector approaches in order to predict whether a given car gets high or low gas mileage based on the Auto data set.
 library(ISLR)
 install.packages('e1071')
