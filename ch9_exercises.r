@@ -1,3 +1,59 @@
+## 4. Generate a simulated two-class data set with 100 observations and two features in which there
+## is a visible but non-linear separation between the two classes. Show that in this setting, a support
+## vector machine with a polynomial kernel (with degree greater than 1) or a radial kernel will outperform
+## a support vector classifier on the training data. Which technique performs best on the test data?
+## Make plots and report training and test error rates in order to back up your assertions.
+library(ISLR)
+install.packages('e1071')
+library(e1071)
+
+pct_of_correct_predictions <- function(predictions, actual) {
+    confusion_matrix <- table(predictions, actual)
+    (
+        (confusion_matrix[1,1] + confusion_matrix[2,2]) / sum(confusion_matrix)
+    ) * 100
+}
+
+set.seed(1)
+x <- matrix(rnorm(200), ncol=2)
+y <- c(rep(-1,10), rep(1,10))
+x[y==1,] =  3 - 8*x[y==1,] + x[y==1,]^2
+plot(x, col=(3-y))
+
+train <- sample(50)
+made_up_data <- data.frame(predictor=x[,1], response=x[,2])
+training_data <- made_up_data[train,]
+test_data <- made_up_data[-train,]
+classifier <- svm(response~predictor, data=training_data, kernel='linear', scale=FALSE)
+classifier.predict <- predict(classifier, training_data)
+mean((classifier.predict - training_data$response)^2)
+## [1] 22.76625
+
+radial.classifier <- svm(response~predictor, data=training_data, kernel='radial', scale=FALSE)
+radial.predict <- predict(radial.classifier, training_data)
+mean((radial.predict - training_data$response)^2)
+## [1] 10.87373
+
+polynomial.classifier <- svm(response~predictor, data=training_data, kernel='polynomial', scale=FALSE, degree=2)
+polynomial.predict <- predict(polynomial.classifier, training_data)
+mean((polynomial.predict - training_data$response)^2)
+## [1] 22.30847
+# I do show that a radial SVM is better than a classifier for training data.
+# I do not show that a polynomial SVM is better.
+
+classifier.test <- predict(classifier, test_data)
+mean((classifier.test - test_data$response)^2)
+## [1] 44.76608
+
+radial.test <- predict(radial.classifier, test_data)
+mean((radial.test - test_data$response)^2)
+## [1] 39.96693
+
+polynomial.test <- predict(polynomial.classifier, test_data)
+mean((polynomial.test - test_data$response)^2)
+## [1] 37.80629
+# I do show, surprisingly, that a polynomial SVM outperforms radial.
+
 ## 5. We have seen that we can fit an SVM with a non-linear kernel in order to perform classification using a non-linear decision boundary. We will now see that we can also obtain a non-linear decision boundary by performing logistic regression using non-linear transformations of the features.
 ## (a) Generate a data set with n = 500 and p = 2, such that the observations belong to two classes with a quadratic decision boundary between them. For instance, you can do this as follows:
 x1 <- runif(500)-0.5
@@ -12,12 +68,8 @@ linear.model <- glm(y~x1+x2)
 ## (d) Apply this model to the training data in order to obtain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be linear.
 linear.predictions <- predict(linear.model, as.factor(y))
 
-
-
 # 7. In this problem, you will use support vector approaches in order to predict whether a given car gets high or low gas mileage based on the Auto data set.
-library(ISLR)
-install.packages('e1071')
-library(e1071)
+
 
 # (a) Create a binary variable that takes on a 1 for cars with gas mileage above the median, and a 0 for cars with gas mileage below the median.
 
@@ -134,12 +186,7 @@ oj.radial <- tune(svm, Purchase~., data=oj.train, kernel='radial',
 radial.train.pred <- predict(oj.radial, oj.train)
 table(radial.train.pred, oj.train$Purchase)
 
-pct_of_correct_predictions <- function(predictions, actual) {
-    confusion_matrix <- table(predictions, actual)
-    (
-        (confusion_matrix[1,1] + confusion_matrix[2,2]) / sum(confusion_matrix)
-    ) * 100
-}
+
 
 pct_of_correct_predictions(radial.train.pred, oj.train$Purchase)
 # [1] 85.125
