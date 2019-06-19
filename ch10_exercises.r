@@ -71,3 +71,63 @@ plot(us.cluster.complete, main='Unscaled observations')
 plot(us.cluster.scaled.complete, main='Scaled observations')
 # I think the scaled observations produce better clustering. I note that Alaska is clustered more closely
 # with other murderours states (Alabama, Louisiana, Georgia, etc).
+
+## 10. In this problem, you will generate simulated data, and then perform PCA and K-means clustering on the data.
+## (a) Generate a simulated data set with 20 observations in each of three classes (i.e. 60 observations total), and 50 variables.
+class_a <- matrix(runif(1000, min=0, max=2400), nrow=20, ncol=50)
+class_b <- matrix(runif(1000, min=-1400, max=9999), nrow=20, ncol=50)
+class_c <- matrix(runif(1000, min=1600, max=4800), nrow=20, ncol=50)
+made_up_data <- rbind(class_a, class_b, class_c)
+
+## (b) Perform PCA on the 60 observations and plot the first two principal component score vectors.
+## Use a different color to indicate the observations in each of the three classes. If the three classes
+## appear separated in this plot, then continue on to part (c). If not, then return to part (a) and modify
+## the simulation so that there is greater separation between the three classes. Do not continue to part (c)
+## until the three classes show at least some separation in the first two principal component score vectors.
+
+pca <- prcomp(made_up_data)
+
+Cols = function(vec) {
+   cols=rainbow(length(unique(vec)))
+   return(cols[as.numeric(as.factor(vec))])
+}
+plot(pca$x[,1:2], col=Cols(made_up_data), pch=36)
+
+## (c) Perform K-means clustering of the observations with K = 3. How well do the clusters that you obtained in
+## K-means clustering compare to the true class labels?
+
+kmeans(made_up_data, 3, nstart=80)$cluster
+##  [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 1 3 1 3 1 1 3 1 1 3 1 1 1 3 3 3 1
+## [39] 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+# It struggles to separate the 2nd and 3rd classes.
+
+## (d) Perform K-means clustering with K = 2. Describe your results.
+##  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [39] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+kmeans(made_up_data, 2, nstart=80)$cluster
+# It lumps classes 2 and 3 together.
+
+## (e) Now perform K-means clustering with K = 4, and describe your results.
+kmeans(made_up_data, 4, nstart=80)$cluster
+##  [1] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 2 1 2 4 1 1 1 2 4 1 2 1 1 1 1 2 2 4
+## [39] 2 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
+# It still separates classes 1 and 3 pretty accurately, but it splits up class 2
+# across 3 clusters.
+
+## (f) Now perform K-means clustering with K = 3 on the first two principal component score vectors,
+## rather than on the raw data. That is, perform K-means clustering on the 60 × 2 matrix of which the
+## first column is the first principal component score vector, and the second column is the second principal
+## component score vector. Comment on the results.
+pcomp.vectors <- data.frame(x=(pca$x[,1], y=pca$x[,2]))
+kmeans(pcomp.vectors, 3, nstart=80)$cluster
+##  [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 1 1 1 1 1 1 1 1 1 3 1 1 1 1 3 3 1
+## [39] 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+# It performs similarly to the first kmeans k=3 clustering we did.  The book is right - PCA
+# explains most of the variance in the data!
+
+## (g) Using the scale() function, perform K-means clustering with K = 3 on the data after scaling each
+## variable to have standard deviation one. How do these results compare to those obtained in (b)? Explain.
+kmeans(scale(made_up_data, center=TRUE, scale=TRUE), 3, nstart=80)$cluster
+##  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 3 2 3 2 3 2 2 3 2 2 3 2 2 3 2 3 3 2
+## [39] 3 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+# This is close to the real classes.
