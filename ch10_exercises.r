@@ -131,3 +131,27 @@ kmeans(scale(made_up_data, center=TRUE, scale=TRUE), 3, nstart=80)$cluster
 ##  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 3 2 3 2 3 2 2 3 2 2 3 2 2 3 2 3 3 2
 ## [39] 3 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 # This is close to the real classes.
+
+## 11. On the book website, www.StatLearning.com, there is a gene expression data set (Ch10Ex11.csv) that
+##  consists of 40 tissue samples with measurements on 1,000 genes. The first 20 samples are from healthy
+##  patients, while the second 20 are from a diseased group.
+## (a) Load in the data using read.csv(). You will need to select header=F.
+genes <- read.csv('~/Documents/intro_to_statistical_learning/ch10ex11.csv', header=FALSE)
+
+## (b) Apply hierarchical clustering to the samples using correlation-based distance, and plot the dendrogram.
+## Do the genes separate the samples into the two groups? Do your results depend on the type of linkage used?
+cor.dist <- as.dist(1-cor(genes)) # why 1 - ?
+par(mfrow=c(2,2))
+plot(hclust(cor.dist, method='complete'), main='Hierarchical cluster using complete linkage')
+plot(hclust(cor.dist, method='single'), main='Hierarchical cluster using simple linkage')
+plot(hclust(cor.dist, method='average'), main='Hierarchical cluster using average linkage')
+plot(hclust(cor.dist, method='centroid'), main='Hierarchical cluster using centroid linkage')
+# Yes.  Yes - simple linkage produces a dendrogram that is difficult to reason about.
+
+## (c) Your collaborator wants to know which genes differ the most across the two groups.
+## Suggest a way to answer this question, and apply it here.
+I found the maximum distance , then looked up that record in the distance matrix:
+max(cor.dist)
+1-cor(genes)
+## [1] 1.098712
+## V20 vs V31
